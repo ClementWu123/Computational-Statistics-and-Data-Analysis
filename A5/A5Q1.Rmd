@@ -1,0 +1,165 @@
+---
+title: "A5Q1"
+output: pdf_document
+---
+
+```{r, echo=FALSE}
+sdn <- function( z ) { 
+  N = length(z)
+  sd(z)*sqrt( (N-1)/N )
+}
+
+skew  <- function(z) { 3*(mean(z) - median(z))/sdn(z) }
+
+powerfun <- function(x, alpha) {
+  if(sum(x <= 0) > 1) stop("x must be positive")
+  if (alpha == 0)
+    log(x)
+  else if (alpha > 0) {
+    x^alpha
+  } else -x^alpha
+}
+```
+
+## a)
+
+### i)
+
+```{r}
+digit <- read.csv('digitData.csv',header=T)
+brightness <- digit$Brightness
+hist(brightness, breaks='FD', xlab='Brightness', main='')
+```
+
+
+### ii)
+
+```{r}
+c(mean(brightness), skew(brightness))
+```
+
+### iii)
+
+```{r}
+createSkewFunction <- function(y.pop) {
+  skew2nd <- function(alpha) {
+    skew( powerfun(x=y.pop, alpha) )
+  }
+}
+
+brightness.sk = createSkewFunction(brightness)
+alpha.star = uniroot(brightness.sk, interval=c(-2,2))$root
+alpha.star
+```
+
+### iv)
+
+```{r}
+skew(powerfun(brightness, alpha.star))
+hist(powerfun(brightness, alpha.star), xlab="[Brightness]^(0.0844973)",
+     main="Histogram of Power Transformed Brightness", breaks='FD')
+```
+
+### v)
+
+```{r}
+attr3 <- function(z){
+  alpha.star = uniroot(createSkewFunction(z), interval=c(-8,8))$root
+  c(mean(z), skew(z), alpha.star)
+}
+attr3(brightness)
+```
+
+
+## b)
+
+```{r}
+M= 1000
+n = 50
+samples <- sapply(1:M, function(m){sample(brightness, n, replace=FALSE)})
+sample.attr <- apply(samples, 2, attr3)
+pop.attr <- attr3(brightness)
+
+par(mfrow=c(1,3))
+hist(sample.attr[1,]-pop.attr[1], breaks='FD', main='Mean', xlab='')
+hist(sample.attr[2,]-pop.attr[2], breaks='FD', main='skewness', xlab='')
+hist(sample.attr[3,]-pop.attr[3], breaks='FD', main='Alpha', xlab='')
+```
+
+
+## c)
+
+### i)
+
+```{r} 
+digitSample <- c(294,133,95,265,154,1,289,232,121,99,129,83,30,56,249,134,46,68,
+                 165,279,105,91,248,285,238,45,194,34,44,5,173,87,18,299,167,64,
+                 42,266,281,210,27,207,271,181,6,212,176,51,28,243)
+brightSam <- brightness[digitSample]
+bright.attr <- attr3(brightSam)
+bright.attr
+```
+
+### ii)
+
+```{r}
+par(mfrow=c(1,2))
+hist(brightSam, breaks='FD', xlab='', main='Brightness')
+hist(powerfun(brightSam, bright.attr[3]), breaks='FD', xlab='', 
+     main='[Brightness]^0.4594728')
+```
+
+### iii)
+
+```{r}
+B = 1000
+s.star <- sapply(1:B, function(m){sample(brightSam, replace=TRUE)})
+boot.attr <- apply(s.star, 2, attr3)
+
+par(mfrow=c(1,3))
+hist(boot.attr[1,]-bright.attr[1], breaks='FD', main='Mean', xlab='')
+hist(boot.attr[2,]-bright.attr[2], breaks='FD', main='skewness', xlab='')
+hist(boot.attr[3,]-bright.attr[3], breaks='FD', main='Alpha', xlab='')
+```
+
+### iv)
+
+```{r}
+s <- matrix(0, nrow= 3, ncol= 3)
+rownames(s) <- c('Mean', 'Skewness', 'Alpha')
+colnames(s) <- c('std error', 'Lower', 'Upper')
+
+s[, 1] <- apply(boot.attr, 1, sd)
+s[, 2:3] <- t(apply(boot.attr, 1, quantile, c(0.025, 0.975)))
+s
+```
+
+
+## d)
+
+```{r}
+M = 100
+B = 1000
+n = 50
+
+samples <- sapply(1:M, function(m){sample(brightness, n, replace=FALSE)})
+sample.conf <- apply(samples, 2, function(sm){
+  s.star <- sapply(1:B, function(m){sample(sm, replace=TRUE)})
+  boot.attr <- apply(s.star, 2, attr3)
+  apply(boot.attr, 1, quantile, c(0.025, 0.975))
+})
+```
+```{r}
+p <- matrix(0, nrow=3, ncol=2)
+rownames(p) <- c('Mean', 'Skewness', 'Alpha')
+colnames(p) <- c('Converge Estimate', 'Std Error')
+
+p[1,1] <- mean((pop.attr[1]>=sample.conf[1,]) & (pop.attr[1]<=sample.conf[2,]))
+p[2,1] <- mean((pop.attr[2]>=sample.conf[3,]) & (pop.attr[2]<=sample.conf[4,]))
+p[3,1] <- mean((pop.attr[3]>=sample.conf[5,]) & (pop.attr[3]<=sample.conf[6,]))
+p[,2] <- sqrt(p[,1]*(1-p[,1])/M)
+p
+```
+
+Conclusion: Since the percentages of the bootstrap interval coverage of three attributes are all over 95%, three attributes all over estimate the proportion instead of expected 95%.
+

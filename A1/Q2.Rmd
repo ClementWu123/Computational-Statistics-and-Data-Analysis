@@ -1,0 +1,131 @@
+---
+title: "Q2"
+output: pdf_document
+---
+
+
+$$
+\begin{aligned}
+\bar{y}&=\frac{1}{N}\sum_{u\in\mathcal{P}}y_u
+\end{aligned}
+$$
+$$
+\begin{aligned}
+SD_{\mathcal{P}}(y)&= \sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u-m\times \bar{y})^2}
+\end{aligned}
+$$
+
+## a)
+
+$$
+\begin{aligned}
+a(y_1+b,y_2+b,...,y_N+b) 
+&= \frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u+b-\bar{y}-b)^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u+b-\bar{y}-b)^2}\right]^3}\\
+&=\frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=a(y_1,y_2,...,y_N)
+\end{aligned}
+$$
+
+Since changing in location does not change the attribute, the skewness coefficient is location invariant.
+
+
+## b)
+
+$$
+\begin{aligned}
+a(m\times y_1,m\times y_2,...,m\times y_N) 
+&= \frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u-m\times \bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u-m\times \bar{y})^2}\right]^3}\\
+&=\frac{\frac{m^3}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{m^2}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{m^3}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[m\times \sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{m^3}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{m^3\times \left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=a(y_1,y_2,...,y_N)
+\end{aligned}
+$$
+
+Therefore, similar to the effect of location, multiplying by m>0 does not change skewness coefficient,
+it is scale invariant.
+
+
+## c)
+
+$$
+\begin{aligned}
+a(m\times y_1+b,m\times y_2+b,...,m\times y_N+b) 
+&= \frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u+b-m\times \bar{y}-b)^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u+b-m\times \bar{y}-b)^2}\right]^3}\\
+&= \frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u-m\times \bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(m\times y_u-m\times \bar{y})^2}\right]^3}\\
+&=\frac{\frac{m^3}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{m^2}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{m^3}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[m\times \sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=a(y_1,y_2,...,y_N)
+\end{aligned}
+$$
+
+Since changing in location and scaling have no effect on skewness coefficient, it is location-scale invariant.
+
+
+## d)
+
+$$
+\begin{aligned}
+a(\mathcal{P}^k)
+&=\frac{\frac{1}{Nk}\sum_{u\in\mathcal{P}^k}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{Nk}\sum_{u\in\mathcal{P}^k}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{1}{Nk}\sum_{u\in\mathcal{P}}k\times (y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{Nk}\sum_{u\in\mathcal{P}}k\times (y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{k}{Nk}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{k}{Nk}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=\frac{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^3}
+{\left[\sqrt{\frac{1}{N}\sum_{u\in\mathcal{P}}(y_u-\bar{y})^2}\right]^3}\\
+&=a(\mathcal{P})
+\end{aligned}
+$$
+
+Therefore, replication does not change the sknewness coefficient. It is replication invariant.
+
+
+## e)
+
+```{r}
+sc = function(y.pop, y, attr, ...) {
+  N <- length(y.pop) + 1
+  Map(function(y) {  N*(attr(c(y,y.pop),...) - attr(y.pop,...))} ,y)
+}
+
+sdn <- function(x) {
+  sd(x)*sqrt((length(x)-1)/length(x))
+}
+
+pearson.moment.skewness <- function(x) {
+  mean((x-mean(x))^3)/sdn(x)^3
+}
+
+set.seed(341)
+pop <-rnorm(1001)
+y <- seq(-8,8,length.out = 1000)
+plot(y, sc(pop,y, pearson.moment.skewness), 
+     main = "Pearson's moment coefficient of skewness", 
+     type = 'l', lwd = 2, ylab='Sensitivity')
+abline(h=0, v=0, col= 'red')
+```
+
+
+## f)
+
+Good: the skewness coefficient is invariant nom matter how we change the units and dulpicate the population
+
+Bad: the curve is unbounded. The skewness coefficient is sensitive to large values. As y goes to infinity,
+sensitivity goes to infinity. As y goes to negative infinity, sensitivity goes to negative infinity.
+

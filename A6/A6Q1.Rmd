@@ -1,0 +1,448 @@
+---
+title: "A6Q1"
+output: pdf_document
+---
+
+```{r, echo= FALSE}
+library(splines)
+getmuhat <- function(sampleXY, complexity = 1) {
+  formula <- paste0("y ~ ",
+                    if (complexity==0) "1"
+                    else {
+                      if (complexity < 3 ) {
+                        paste0("poly(x, ", complexity, ", raw = FALSE)") 
+                        ## due to Numerical overflow 
+                      } else {   
+                        ## if complexity >= 20 use a spline.
+                        paste0("bs(x, ", complexity, ")") 
+                      }
+                    }  
+  )
+  
+  fit <- lm(as.formula(formula), data = sampleXY)
+  tx = sampleXY$x
+  ty = fit$fitted.values
+  
+  range.X = range(tx)
+  val.rY  = c( mean(ty[tx == range.X[1]]), 
+               mean(ty[tx == range.X[2]]) )
+  
+  ## From this we construct the predictor function
+  muhat <- function(x){
+    if ("x" %in% names(x)) {
+      ## x is a dataframe containing the variate named
+      ## by xvarname
+      newdata <- x
+    } else 
+      ## x is a vector of values that needs to be a data.frame
+    { newdata <- data.frame(x = x) }
+    ## The prediction
+    ## 
+    suppressWarnings({ 
+      ypred = predict(fit, newdata = newdata, silent = TRUE)    })
+    #val = predict(fit, newdata = newdata)
+    ypred[newdata$x < range.X[1]] = val.rY[1]
+    ypred[newdata$x > range.X[2]] = val.rY[2]
+    ypred
+  }
+  ## muhat is the function that we need to calculate values 
+  ## at any x, so we return this function from getmuhat
+  muhat
+}
+getSampleComp <- function(pop, size, replace=FALSE) {
+  N <- dim(pop)[1]
+  samp <- rep(FALSE, N)
+  samp[sample(1:N, size, replace = replace)] <- TRUE
+  samp
+}
+
+
+### This function will return a data frame containing
+### only two variates, an x and a y
+getXYSample <- function(xvarname, yvarname, samp, pop) {
+  sampData <- pop[samp, c(xvarname, yvarname)]
+  names(sampData) <- c("x", "y")
+  sampData
+}
+getmubar <- function(muhats) {
+  function(x) {
+    Ans <- sapply(muhats, FUN=function(muhat){muhat(x)})
+    apply(Ans, MARGIN=1, FUN=mean)
+  }
+}
+ave_y_mu_sq <- function(sample, predfun, na.rm = TRUE){
+  mean((sample$y - predfun(sample$x))^2, na.rm = na.rm)
+}
+ 
+###########
+
+ave_mu_mu_sq <- function(predfun1, predfun2, x, na.rm = TRUE){
+  mean((predfun1(x) - predfun2(x))^2, na.rm = na.rm)
+}
+
+###########
+
+
+var_mutilde <- function(Ssamples, Tsamples, complexity){
+  ## get the predictor function for every sample S
+  muhats <- lapply(Ssamples, 
+                   FUN=function(sample){
+                     getmuhat(sample, complexity)
+                   }
+  )
+  ## get the average of these, mubar
+  mubar <- getmubar(muhats)
+  
+  ## average over all samples S
+  N_S <- length(Ssamples)
+  mean(sapply(1:N_S, 
+              FUN=function(j){
+                ## get muhat based on sample S_j
+                muhat <- muhats[[j]]
+                ## average over (x_i,y_i) in a
+                ## single sample T_j the squares
+                ## (y - muhat(x))^2
+                T_j <- Tsamples[[j]]
+                ave_mu_mu_sq(muhat, mubar, T_j$x)
+              }
+  )
+  )
+}
+bias2_mutilde <- function(Ssamples, Tsamples, mu, complexity){
+  ## get the predictor function for every sample S
+  muhats <- lapply(Ssamples, 
+                   FUN=function(sample) getmuhat(sample, complexity)
+  )
+  ## get the average of these, mubar
+  mubar <- getmubar(muhats)
+  
+  ## average over all samples S
+  N_S <- length(Ssamples)
+  mean(sapply(1:N_S, 
+              FUN=function(j){
+                ## average over (x_i,y_i) in a
+                ## single sample T_j the squares
+                ## (y - muhat(x))^2
+                T_j <- Tsamples[[j]]
+                ave_mu_mu_sq(mubar, mu, T_j$x)
+              }
+  )
+  )
+}
+getmuFun <- function(pop, xvarname, yvarname){
+  ## First remove NAs
+  pop <- na.omit(pop[, c(xvarname, yvarname)])
+  x <- pop[, xvarname]
+  y <- pop[, yvarname]
+  xks <- unique(x)
+  muVals <- sapply(xks,
+                   FUN = function(xk) {
+                     mean(y[x==xk])
+                   })
+  ## Put the values in the order of xks
+  ord <- order(xks)
+  xks <- xks[ord]
+  xkRange <-xks[c(1,length(xks))]
+  minxk <- min(xkRange) 
+  maxxk <- max(xkRange)
+  ## mu values
+  muVals <- muVals[ord]
+  muRange <- muVals[c(1, length(muVals))]
+  muFun <- function(xVals){
+    ## vector of predictions
+    ## same size as xVals and NA in same locations
+    predictions <- xVals
+    ## Take care of NAs
+    xValsLocs <- !is.na(xVals)
+    ## Just predict non-NA xVals
+    predictions[xValsLocs] <- sapply(xVals[xValsLocs],
+      FUN = function(xVal) {
+        if (xVal < minxk) {
+          result <- muRange[1]
+        } else if (xVal > maxxk) {
+          result <- muRange[2]
+        } else if ( any(xVal == xks) ) {
+          result <- muVals[xks == xVal]     
+        } else {
+          xlower <- max(c(minxk, xks[xks < xVal]))
+          xhigher <- min(c(maxxk, xks[xks >= xVal]))
+          mulower <- muVals[xks == xlower]
+          muhigher <- muVals[xks == xhigher]
+          
+          midx = (xlower + xhigher)/2
+          if (xVal <= midx) result <- mulower
+          else result <- muhigher
+        }
+        result
+      }
+    )
+    ## Now return the predictions (including NAs)
+    predictions
+  }
+  muFun
+}
+apse_all <- function(Ssamples, Tsamples, complexity, tau){
+  ## average over the samples S
+  ##
+  N_S <- length(Ssamples)
+  muhats <- lapply(Ssamples, 
+                   FUN=function(sample) getmuhat(sample, complexity)
+  )
+  ## get the average of these, mubar
+  mubar <- getmubar(muhats)
+  
+  rowMeans(sapply(1:N_S, 
+                  FUN=function(j){
+                    T_j <- Tsamples[[j]]
+                    S_j <- Ssamples[[j]]
+                    muhat <- muhats[[j]]
+                    ## Take care of any NAs
+                    T_j <- na.omit(T_j)
+                    y <- c(S_j$y, T_j$y)
+                    x <- c(S_j$x, T_j$x)
+                    
+                    tau_x    <- tau(x)
+                    muhat_x <- muhat(x)
+                    mubar_x <- mubar(x)
+                    
+                    apse        <- (y - muhat_x)
+                    bias2       <- (mubar_x - tau_x)
+                    var_mutilde <-  (muhat_x - mubar_x)
+                    var_y       <- (y - tau_x)
+                    
+                    squares <- rbind(apse, var_mutilde, bias2, var_y)^2
+                    
+                    ## return means
+                    rowMeans(squares)
+                  }
+  ))
+}
+```
+
+
+## a)
+
+```{r}
+ot1996 <- read.csv('ottawaTemp1996.csv', header=T)
+temp <- data.frame(x = 1:365, y = ot1996$Temp)
+
+muhat3  <- getmuhat(temp, 3)
+muhat12 <- getmuhat(temp, 12)
+
+xlim <- extendrange(temp[,1])
+
+plot(temp,
+     pch=19, col= adjustcolor("black", 0.5))
+curve(muhat3, from = xlim[1], to = xlim[2], 
+      add = TRUE, col="red", lwd=2)
+curve(muhat12, from = xlim[1], to = xlim[2], 
+      add = TRUE, col="steelblue", lwd=2)
+title(main="red=degree 3 , blue=degree 12")
+```
+
+
+## b)
+
+```{r}
+N_S <- 25
+set.seed(341)  # for reproducibility
+
+n= 50
+samps    <- lapply(1:N_S, FUN= function(i){getSampleComp(temp, n)})
+Ssamples <- lapply(samps, FUN= function(Si){getXYSample("x", "y", Si, temp)})
+Tsamples <- lapply(samps, FUN= function(Si){getXYSample("x", "y", !Si, temp)})
+
+muhats3 <- lapply(Ssamples, getmuhat, complexity = 3)
+
+muhats12 <- lapply(Ssamples, getmuhat, complexity = 12)
+```
+
+
+## c)
+
+```{r}
+par(mfrow=c(1,2))
+
+xvals <- seq(xlim[1], xlim[2], length.out = 200)
+plot(temp, 
+     pch=19, type='n',
+     xlab="x", ylab="predictions",
+     main= " muhats (degree = 3) & mubar")
+
+
+for (i in 1:N_S) {
+  curveFn <- muhats3[[i]]
+  curve(curveFn, from = xlim[1], to = xlim[2], add=TRUE, 
+        col=adjustcolor("blue", 0.2), lwd=3, lty=(1))
+}
+
+curve(muhat3,  from = xlim[1], to = xlim[2],
+      add=TRUE, col="firebrick", lwd=3)
+
+points(temp, 
+     pch=19, col= adjustcolor("black", 0.5))
+
+
+plot(temp, 
+     pch=19, type='n',
+     xlab="x", ylab="predictions",
+     main= " muhats (degree = 12) & mubar")
+
+for (i in 1:N_S) {
+  curveFn <- muhats12[[i]]
+  curve(curveFn, xlim[1], xlim[2], add=TRUE, 
+        col=adjustcolor("blue", 0.2), lwd=3, lty=1)
+}
+
+curve(muhat12, xlim[1], xlim[2], add=TRUE, col="firebrick", lwd=3)
+
+points(temp, 
+     pch=19, col= adjustcolor("black", 0.5))
+```
+
+
+## d)
+
+```{r}
+var_mutilde(Ssamples, Tsamples, complexity=3)
+var_mutilde(Ssamples, Tsamples, complexity=12)
+```
+
+
+## e)
+
+```{r}
+muhat = getmuFun(temp, "x", 'y')
+bias2_mutilde(Ssamples, Tsamples, muhat, complexity=3)
+bias2_mutilde(Ssamples, Tsamples, muhat, complexity=12)
+```
+
+
+## f)
+
+```{r}
+complexities <- 0:12
+muhat = getmuFun(temp, "x", 'y')
+
+
+apse_vals <-  sapply(complexities, 
+                     FUN = function(complexity){
+                       apse_all(Ssamples, Tsamples, complexity = complexity, 
+                                muhat)
+                    }
+)
+
+round( t(rbind(complexities, apse=round(apse_vals,5))),1)
+```
+
+```{r}
+plot( complexities, apse_vals[1,], xlab="Degree", ylab="", type='l', 
+      ylim=c(0, 450), col="purple", lwd=2 )
+lines(complexities, apse_vals[2,], col="blue", lwd=2 )
+lines(complexities, apse_vals[3,], col="red", lwd=2)
+lines(complexities, apse_vals[4,], col="black", lwd=2)
+```
+
+Conclusion: The polynomial with degree 5 has the lowest APSE. The bias starts off really high and continue to decrease from 1 to 12. 
+
+
+## g)
+
+### i)
+
+```{r}
+sample.kfold <- function(k=NULL, pop=NULL, xvarname=NULL, yvarname=NULL ) {
+  
+  N = nrow(pop)
+  kset = rep_len(1:k, N)
+  kset = sample(kset)
+  
+  samps = list()
+  for (i in 1:k) { 
+    samps[[i]] = logical(N)
+    samps[[i]][kset != i] = TRUE
+  }
+
+set.seed(341)
+Ssamples <- lapply(samps, 
+                   FUN= function(Si){getXYSample(xvarname, yvarname, Si, pop)})
+
+Tsamples <- lapply(samps, 
+                   FUN= function(Si){getXYSample(xvarname, yvarname, !Si, pop)})
+
+    list(Ssamples=Ssamples,Tsamples=Tsamples)
+}
+```
+
+### ii)
+
+```{r}
+temp.muFun = getmuFun(temp, "x", 'y')
+kfold.samples = sample.kfold(k=10, pop=temp, "x", "y")
+apse_all(kfold.samples$Ssamples, kfold.samples$Tsamples, complexity = 3, 
+         temp.muFun)
+```
+
+### iii)
+
+```{r}
+complexities <- 0:12
+
+
+apse_vals <- sapply(complexities, 
+      FUN = function(complexity){
+          apse_all(kfold.samples$Ssamples, kfold.samples$Tsamples, 
+              complexity = complexity, temp.muFun) })
+
+# Print out the results
+t(rbind(complexities, apse=round(apse_vals,5)))
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot( complexities, apse_vals[1,], xlab="Degree", ylab="", type='l', 
+      ylim=c(0, max(apse_vals) ), col="purple", lwd=2 )
+lines(complexities, apse_vals[2,], col="blue", lwd=2 )
+lines(complexities, apse_vals[3,], col="red", lwd=2)
+lines(complexities, apse_vals[4,], col="black", lwd=2)
+
+# The increase in apse is too sharp in higher complexities. Let's zoom in a bit
+zoom = 5:12
+plot( complexities[zoom], apse_vals[1, zoom], xlab="Degree", ylab="", 
+      type='l', ylim=c(0, max(apse_vals[,zoom])  ), col="purple", lwd=2 )
+lines(complexities[zoom], apse_vals[2, zoom], col="blue", lwd=2 )
+lines(complexities[zoom], apse_vals[3, zoom], col="red", lwd=2)
+lines(complexities[zoom], apse_vals[4, zoom], col="black", lwd=2)
+```
+
+Conclusion: The polynomial with degree 12 has the lowest APSE. We can pick degree 12.
+
+
+## h)
+
+```{r}
+other <- read.csv('ottawaOtherYears.csv', header=T)
+t <- data.frame(x = rep_len(1:365, nrow(other)), y = other$Temp)
+
+apse <- function(y, x, predfun){
+  mean((y - predfun(x))^2, na.rm = TRUE)
+}
+
+complexities <- 0:12
+
+
+apse_vals <-  sapply(complexities, 
+                     FUN = function(complexity){
+                       apse(t$y, t$x, getmuhat(temp, complexity))
+                    }
+)
+
+round( t(rbind(complexities, apse=round(apse_vals,5))),1)
+plot( complexities, apse_vals, xlab="Degree", ylab="", type='l', 
+      ylim=c(0, max(apse_vals) ), col="purple", lwd=2 )
+```
+
+Conclusion: The polynomial with degree 4 has the lowest APSE. Comparing to f) and g), the complexity is the lowest. As we want to use the function that is the least complex, we prefer to use degree 4.
+
+
+

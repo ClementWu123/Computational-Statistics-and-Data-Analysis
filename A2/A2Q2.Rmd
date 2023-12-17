@@ -1,0 +1,112 @@
+---
+title: "A2Q2"
+output: pdf_document
+fontsize: 10pt
+---
+
+**Dataset:** [Wine_quality (Click here)](https://www.kaggle.com/uciml/red-wine-quality-cortez-et-al-2009)
+
+(a) (2 $marks$) Consider the scatterplot below of $(chlorides)^{1.5}$ versus $residualSugar$ from wine quality data set:\
+
+    **Which** of the following transformations might straighten this scatterplot?\
+
+```{r, fig.width=4, fig.height=3, echo=FALSE}
+wine <- read.csv("winequality-red.csv", header=TRUE)
+residualSugar <- wine$residual.sugar
+chlorides <- wine$chlorides
+par(mar=c(5,5,2,2))
+plot(residualSugar, (chlorides)^0.5, pch = 19, col=adjustcolor("firebrick", alpha = 0.5 ), cex = 0.5, cex.lab = 0.7)
+```
+
+\space (i) $log(chlorides)$ vs $residualSugar$ 
+
+\space (ii) $chlorides$ vs $residualSugar$
+
+\space (iii) $(chlorides)^{0.5}$ vs $(residualSugar)^{1.5}$ 
+
+\space (iv) $(chlorides)^{0.5}$ vs $log(residualSugar)$
+
+**Answer:** (i) (iv)
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(residualSugar, log(chlorides), pch = 19, col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(i)")
+plot(residualSugar, chlorides, pch = 19, col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(ii)")
+plot(residualSugar^1.5, chlorides^0.5, pch = 19, col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(iii)")
+plot(log(residualSugar), chlorides^0.5, pch = 19, col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(iv)")
+```
+
+Explanation:
+
+From the original graph, we can see that the curvature corresponds to the third quadrant. This suggests that the ladder move should be "Down on X; Down on Y".  For (i), $\alpha$ of $residualSugar$ remains the same while $\alpha$ of $chlorides$ decreases. For (ii), $\alpha$ of $residualSugar$ remains the same, but $\alpha$ of $chlorides$ increases.  For (iii),  $\alpha$ of $residualSugar$ increases, but $\alpha$ of $chlorides$ remains the same. For (iv),  $\alpha$ of $residualSugar$ decreases, but $\alpha$ of $chlorides$ remains the same. Therefore, (i) and (iv) are true.
+
+
+(b) (2 $marks$) Consider the histogram below of $SulferDioxide$:\
+
+    **Which** of the following transformations might makethis histogram more symmetric?\
+    
+```{r, fig.width=3, fig.height=2,echo=FALSE}
+par(mar=c(1,1,1,1))
+SulferDioxide <- wine$total.sulfur.dioxide
+hist(SulferDioxide, breaks = 20)
+```
+
+
+\space (i) $SulferDioxide^2$        
+
+\space (ii) $log(SulferDioxide)$
+
+\space (iii) $SulferDioxide^{1.5}$  
+
+\space (iv) $\sqrt{SulferDioxide}$
+
+**Answer:** (ii) (iv)
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+hist(SulferDioxide^2, breaks = 20)
+hist(log(SulferDioxide), breaks = 20)
+hist(SulferDioxide^1.5, breaks = 20)
+hist(sqrt(SulferDioxide), breaks = 20)
+```
+
+
+Explanation:
+
+From the original graph, we see that the "bump" is on lower values. This suggests us to move the power "lower" on the ladder. Since we have $\alpha$ equals to 1. To make the graph symmetric, we want $\alpha$ to be smaller than. In these 4 options, (ii) has $\alpha$=0 and (iv) has 1/2. Therefore, (ii) and (iv) are correct. From graphs, we can see that the right tails of distributions in (ii) and (iv) are reduced and the bumps move to the right. For the other two graphs, the right tails become longer, distributions are more asymmetric. 
+
+\newpage
+
+\begin{center} 
+Appendix
+\end{center}
+
+```{r, echo=T, fig.show='hide'}
+wine <- read.csv("winequality-red.csv", header=TRUE)
+residualSugar <- wine$residual.sugar
+chlorides <- wine$chlorides
+par(mar=c(5,5,2,2))
+plot(residualSugar, (chlorides)^0.5, pch = 19, 
+     col=adjustcolor("firebrick", alpha = 0.5 ), cex = 0.5, cex.lab = 0.7)
+
+par(mfrow=c(2,2))
+plot(residualSugar, log(chlorides), pch = 19, 
+     col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(i)")
+plot(residualSugar, chlorides, pch = 19, 
+     col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(ii)")
+plot(residualSugar^1.5, chlorides^0.5, pch = 19, 
+     col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(iii)")
+plot(log(residualSugar), chlorides^0.5, pch = 19, 
+     col=adjustcolor("firebrick", alpha = 0.5 ), cex=0.5, main="(iv)")
+
+par(mar=c(1,1,1,1))
+SulferDioxide <- wine$total.sulfur.dioxide
+hist(SulferDioxide, breaks = 20)
+
+
+par(mfrow=c(2,2))
+hist(SulferDioxide^2, breaks = 20)
+hist(log(SulferDioxide), breaks = 20)
+hist(SulferDioxide^1.5, breaks = 20)
+hist(sqrt(SulferDioxide), breaks = 20)
+```

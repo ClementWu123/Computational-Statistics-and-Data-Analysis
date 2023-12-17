@@ -1,0 +1,35 @@
+---
+title: "Q4"
+output: pdf_document
+---
+
+### a)
+
+* In line 13, the student does not use the mathematical symbol to represent the number of population. The size "N-1" should be "$\mathcal{N}$-1".
+
+* In line 13, the student wrote "sensitive cruve". This is a grammar error. "cruve" should be "curve".
+
+* The teacher requires the student to be limited to 1 to 2 pages. However, the student wrote 3 pages in total. This is a formatting problem.
+
+
+
+### b)
+
+* In line 14, $\mathcal{P}$ should represent the original population without the new variate $y$. Therefore, $\mathcal{P}$ should be {${y_1, y_2, ..., y_{N-1}}$} instead of {${y_1, y_2, ..., y_{N-1}, y}$}
+
+* In line 8, we know that the minimum of the population is an attribute. In the document, the student assigns the minimum directly to the population, which is not true. Therefore, we should use $a(\mathcal{P})$ = $a(y_1, y_2, ..., y_{N-1})$ = $y_{(N)}$. $a(\mathcal{P}^*)$ is similar.
+
+
+### c)
+
+No, the student did not summarize the concept in his/her own word. Instead, he copied some sentences directly from the lecture notes. For example, in line 19-20, the student wrote "the sensitivity curve gives a scaled measure of the effect that a single variate value $y$ has on the value of a population attribute $a(\mathcal{P})$". This sentence matches the lecture note 2.2.3 page 4 under the sensitive curve section. In line 23, the student wrote "A single observation can change the average by a huge (even infinite) amount". This was copied from the result of the arithmetic mean example in the lecture note 2.2.3 page 6.Therefore, the student did not summarize by himself/herself.
+
+
+### d)
+
+The student should learn more about latex formatting and correct those minor mistakes. The student has to review the course material to get a better understanding of sensitivity curve and writes important characteristics by himself/herself. After finished the report, the student should always go through the report to find if there exists an error.
+
+
+### e)
+
+I will give the report 4.5 out of 10. One mark for the Format: the whole report contains latex errors and the typesetting is totally messed up, making it hard to read. 1.5 mark to the writing: there exists a few grammar errors. 2 marks for the Content: The summarized concept is directly from the lecture notes. The example is really similar to the example given in the lecture note. The explanation to example is obvious, without any deep thoughts.

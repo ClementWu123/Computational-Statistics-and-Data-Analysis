@@ -1,0 +1,71 @@
+---
+title: "Q3"
+output: pdf_document
+---
+
+### Dataset URL (Click Below):
+
+[Kitchener Car Collision(https://data.waterloo.ca/datasets/KitchenerGIS::traffic-collisions/data?geometry=-80.703%2C43.374%2C-80.175%2C43.461)](https://data.waterloo.ca/datasets/KitchenerGIS::traffic-collisions/data?geometry=-80.703%2C43.374%2C-80.175%2C43.461)
+
+
+
+
+### Load and Display Data
+
+```{r}
+traffic <- read.csv('Traffic_Collisions.csv',header=T)
+head(traffic)
+```
+
+
+
+
+### Description and Population Justification
+
+This is a dataset taken from City of Waterloo Open Data website. The dataset records all intersection and mid-block traffic collisions happened in the city of Kitchener from 2013 to present, which means that new collisions will continue to be recorded into the table in the future. The whole dataset represents a population of $\mathcal{N}=12201$ units. 
+
+It is a population because:\
+\
+1. There are limited numbers of collisions in the dataset. We are able to count how many rows in the table. Therefore, the data is finite.\
+
+2. All collisions are recorded in the given time interval. They are not selected based on an unique characteristic or feature. Therefore, the data is complete.\
+
+3. The table contains comprehensive info of every single collision, not limited to just a few variates.
+
+Therefore, the dataset represents a population.
+
+
+
+### Unit and Variates
+
+The unit in the dataset is: a collision happened in the city of Kitchener\
+
+Two Variates:\
+\
+1. Location: The variate describes the specific location in the city where the collision happened.\
+\
+2. Environment Condition: The variate describes the weather condition on the road when the collision happened.
+
+
+### A single Graph
+```{r}
+levels(as.factor(traffic$ENVIRONMENT_CONDITION))
+```
+```{r}
+counts <- table(traffic$ENVIRONMENT_CONDITION)
+freqs <- as.numeric(counts)
+graph <- barplot(counts, main = "Collision Counts by Environment Condition", 
+                 xlab = "Road Condition",
+                 ylab = "Collision Counts",
+                 cex.names = 0.6,
+                 ylim = c(0,11000), 
+                 names.arg = c("NA", "Clear", "Rain", "Snow", "Freeze Rain", 
+                               "Drift Snow", "Wind", "Fog", "Other"))
+text(x = graph, y = freqs, label = freqs, pos = 3, cex = 0.8, col = "black")
+```
+
+
+
+### Interesting Feature
+
+From the graph, we can see an interesting feature that the maximum count of collision by environment condition is the clear day. Based on the common sense, we normally think that terrible weathers will cause a higher risk of collision. In those days, bad weathers can do a damage to the car. The car will easily lose control. However, from the data, most of the collision happened in clear days. The reason behind this situation is that drivers tend to lose focus when they can see the road clearly. When they drive in bad weathers, they are more aware of the potential danger and drive more cautiously.

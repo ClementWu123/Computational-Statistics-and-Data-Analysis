@@ -1,0 +1,41 @@
+---
+title: "A3Q3"
+output: pdf_document
+---
+
+## Question (2 marks total):
+
+There is one averaging attribute that widely used for rates and ratios. We called it $'Harmonic \hspace{0.1cm} Mean'$. The $harmonic \hspace{0.1cm} mean$ is defined as:
+$$
+\begin{aligned}
+a(x_1, ..., x_N)&=\frac{N}{\frac{1}{x_1}+\frac{1}{x_2}+ ... + \frac{1}{x_N}}
+\end{aligned}
+$$
+
+Derive the sensitivity curve for the $harmonic \hspace{0.1cm} mean$.
+
+## Answers:
+
+We first list the population with and without the added variate.
+$$
+\begin{aligned}
+\mathcal{P}&=\{y_1,....,y_{N-1}\} \hspace{0.2cm} \rightarrow \hspace{0.2cm} a(\mathcal{P}) = \frac{N-1}{\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}}\\
+\mathcal{P^*}&=\{y_1,....,y_{N-1},y\} \hspace{0.2cm} \rightarrow \hspace{0.2cm} a(\mathcal{P^*}) = \frac{N}{\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}+\frac{1}{y}} \hspace{1cm} (0.5 \hspace{0.2cm} marks)
+\end{aligned}
+$$
+then we calculate the sensitivity curve:
+
+$$
+\begin{aligned}
+SC(y)&=N[a(\mathcal{P^*})-a(\mathcal{P})]\\
+&= N(\frac{N}{\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}+\frac{1}{y}}-\frac{N-1}{\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}})  \hspace{1cm} (1 \hspace{0.2cm} marks)\\
+Let \hspace{0.2cm} \frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}&= A \hspace{0.2cm} and \hspace{0.2cm} \frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}}+\frac{1}{y} = A + \frac{1}{y}\\
+then \hspace{0.2cm} SC(y) &=N(\frac{N}{A+\frac{1}{y}}-\frac{N-1}{A})\\
+&=\frac{N^2}{A+\frac{1}{y}}-\frac{N^2-N}{A}\\
+&=\frac{N^2A-(N^2-N)(A+\frac{1}{y})}{(A+\frac{1}{y})A}\\
+&=\frac{N^2A-N^2A-\frac{N^2}{y}+NA+\frac{N}{y}}{(A+\frac{1}{y})A}\\
+&=\frac{\frac{N^2}{y}+NA+\frac{N}{y}}{(A+\frac{1}{y})A}\\
+&=\frac{N^2+N+ANy}{A(Ay+1)}\\
+&=\frac{N^2+N+Ny(\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}})}{(\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}})[y(\frac{1}{y_1}+\frac{1}{y_2}+ ... + \frac{1}{y_{N-1}})+1]} \hspace{1cm} (0.5 \hspace{0.2cm} marks)
+\end{aligned} 
+$$

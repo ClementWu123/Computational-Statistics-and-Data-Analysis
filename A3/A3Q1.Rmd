@@ -1,0 +1,533 @@
+---
+title: "A3Q1"
+output: pdf_document
+---
+
+## a)
+
+```{r}
+one <- read.csv("one180.csv", header = T)
+two <- read.csv("two120.csv", header = T)
+
+Brightness <- c(rowMeans(one), rowMeans(two))
+Digit1 <- c(rep(1, 180), rep(0, 120))
+
+df <- data.frame('Brightness' = Brightness, 'Digit1' = Digit1)
+head(df)
+```
+
+
+## b)
+
+```{r}
+par(mfrow = c(1, 2))
+hist(df$Brightness, breaks = seq(8, 68, 6), prob = TRUE, 
+     main = 'Equal Bin Width', xlab = 'Brightness')
+quant.brightness <- quantile(df$Brightness, seq(0, 1, length.out = 11))
+hist(df$Brightness, breaks = quant.brightness, main = 'Varying Bin Width',
+          xlab = 'Brightness')
+```
+
+
+## c)
+
+```{r}
+plotting <- function(bright) { 
+  plot( df$Brightness, df$Digit1, pch=19, 
+        col=c(adjustcolor("firebrick",0.5), 
+              adjustcolor("blue", 0.5))[df$Digit1 +1], 
+        xlim=c(8,68), xlab="Brightness", ylab="Digit1" )
+  
+  propx = matrix(0, nrow=length(bright)-1, ncol=5)
+  dimnames(propx)[[2]] = c("Lower", "Upper", "Total", 
+                           "Num.Digit1", "Prop.Digit1")
+  for (i in 1:nrow(propx)) {
+    propx[i,1:2] = c(bright[i], bright[i+1])
+    propx[i,3] = sum(df$Brightness > bright[i] & df$Brightness <= bright[i+1])
+    propx[i,4] = sum(df$Digit1[df$Brightness > bright[i] & 
+                                 df$Brightness <= bright[i+1]] )
+    propx[i,5] = round(propx[i,4]/propx[i,3],3)
+  }
+  
+  points( bright[-length(bright)]+ diff(bright)/2, 
+          propx[,5], pch=19,  col=adjustcolor("black", 0.5), type='b' ) 
+  propx
+}
+
+
+bright1 = seq(8, 68, 6)
+bright2 = quantile(df$Brightness, seq(0,1,length.out=11))
+par(mfrow = c(1,2))
+plotting(bright1)
+plotting(bright2)
+```
+
+*comment:* From two tables, we can see that bright 2 has nearly equal number of 1s within each group, while bright 1 has the same interval width. Also, we see that Digit 2 are generally brighter than Digit 1 as it has more brightness in the middle. Digit 1's prob line is smoother than the digit 2.
+We can also see that there are only a few 1's for the last three to four bins for two tables.
+
+## d)
+
+### (i)
+
+```{r}
+z = seq(-6, 6, .01)
+plot(z, pnorm(z), type='l')
+```
+
+### (ii)
+
+```{r}
+plotting(bright2)
+z = seq(8, 68, .01)
+lines(z, pnorm(1/2-0.03*z))
+```
+
+
+## e)
+
+$$
+\begin{aligned}
+Formula:\\
+l(\theta)&=l(\alpha,\beta)=\frac{1}{N}\sum_{i=1}^{N}{[y_ilog\frac{p_i}{1-p_i}+log(i-p_i)]}\\
+p_i&=\Phi{(\bar{y})}=\Phi{(\alpha+\beta[x_i-\bar{x}])}\\
+Derivation:\\
+\frac{\partial l}{\partial \alpha}&=\frac{1}{N}\sum_{i=1}^N\frac{\partial l_i}{\partial p_i}\frac{\partial p_i}{\partial \hat{y}_i}\frac{\partial \hat{y}_i}{\partial \alpha}
+\hspace{1cm}
+AND
+\hspace{1cm}
+\frac{\partial l}{\partial \beta}=\frac{1}{N}\sum_{i=1}^N\frac{\partial l_i}{\partial p_i}\frac{\partial p_i}{\partial \hat{y}_i}\frac{\partial \hat{y}_i}{\partial \beta}\\
+\frac{\partial l_i}{\partial p_i}&=\frac{\partial}{\partial p_i}[y_ilog\frac{p_i}{1-p_i}-log(1-p_i)]=\frac{y_i-p_i}{p_i(1-p_i)}\\
+\frac{\partial p_i}{\partial \hat{y_i}}&=\frac{\partial p_i}{\partial \hat{y_i}}\Phi(\hat{y}_i)=\phi(\hat{y}_i)\\
+\frac{\partial \hat{y}_i}{\partial \alpha}&=\frac{\partial}{\partial \alpha}(\alpha + \beta[x_i-\bar{x}])=1
+\hspace{1cm}
+AND
+\hspace{1cm}
+\frac{\partial \hat{y}_i}{\partial \beta}=\frac{\partial}{\partial \beta}(\alpha + \beta[x_i-\bar{x}])=x_i-\bar{x}\\
+\frac{\partial l}{\partial \alpha}&=\frac{1}{N}\sum_{i=1}^N\frac{\partial l_i}{\partial p_i}\frac{\partial p_i}{\partial \hat{y}_i}\frac{\partial \hat{y}_i}{\partial \alpha}=\frac{1}{N}\sum_{i=1}^N\frac{y_i-p_i}{p_i(1-p_i)}\times\phi(\hat{y}_i)\times1\\
+\frac{\partial l}{\partial \beta}&=\frac{1}{N}\sum_{i=1}^N\frac{\partial l_i}{\partial p_i}\frac{\partial p_i}{\partial \hat{y}_i}\frac{\partial \hat{y}_i}{\partial \beta}=\frac{1}{N}\sum_{i=1}^N\frac{y_i-p_i}{p_i(1-p_i)}\times\phi(\hat{y}_i)\times(x_i-\bar{x})\\
+Therefore,\\
+\frac{\partial l}{\partial (\alpha, \beta)}&=\frac{1}{N}\sum_{i=1}^N\frac{y_i-p_i}{p_i(1-p_i)}\times\phi{(\hat{y})}\times\begin{bmatrix}1\\x_i-\bar{x}\end{bmatrix}
+\end{aligned}
+$$
+
+
+
+## f)
+
+### (i)
+
+```{r}
+createObjProbit <- function(x,y) {
+  ## local variable
+  xbar <- mean(x)
+  ## Return this function
+  function(theta) { 
+    alpha <- theta[1]
+    beta <- theta[2]
+    y.hat = alpha + beta * (x - xbar)
+    pi = pnorm(y.hat)
+    
+    -1*mean(y*log(pi/(1-pi)) + log(1-pi))
+  }
+}
+```
+
+
+### (ii)
+
+```{r}
+createGradientProbit <- function(x,y) {
+  ## local variables
+  xbar <- mean(x)
+  ybar <- mean(y)
+  N <- length(x)
+  
+  function(theta) {
+    alpha <- theta[1]
+    beta <- theta[2]
+    y.hat = alpha + beta * (x - xbar)
+    pi = pnorm(y.hat)
+    resids = y - pi
+    wt = dnorm(y.hat)/(pi*(1-pi))
+    
+    -1*c(mean(resids*wt), mean(wt*(x - xbar) * resids))
+  }
+}
+```
+
+
+### (iii)
+
+```{r, echo=FALSE}
+gradientDescent <- function(theta = 0, 
+                            rhoFn, gradientFn, lineSearchFn, testConvergenceFn,
+                            maxIterations = 100,  
+                            tolerance = 1E-6, relative = FALSE, 
+                            lambdaStepsize = 0.01, lambdaMax = 0.5 ) {
+  
+  converged <- FALSE
+  i <- 0
+  
+  while (!converged & i <= maxIterations) {
+    g <- gradientFn(theta) ## gradient
+    glength <-  sqrt(sum(g^2)) ## gradient direction
+    if (glength > 0) g <- g /glength
+    
+    lambda <- lineSearchFn(theta, rhoFn, g,  
+                           lambdaStepsize = lambdaStepsize, 
+                           lambdaMax = lambdaMax)
+    
+    thetaNew <- theta - lambda * g
+    converged <- testConvergenceFn(thetaNew, theta,
+                                   tolerance = tolerance,
+                                   relative = relative)
+    theta <- thetaNew
+    i <- i + 1
+  }
+  
+  ## Return last value and whether converged or not
+  list(theta = theta, converged = converged, iteration = i, 
+       fnValue = rhoFn(theta))
+}
+
+
+gridLineSearch <- function(theta, rhoFn, g, 
+                           lambdaStepsize = 0.01, 
+                           lambdaMax = 1) {
+  ## grid of lambda values to search
+  lambdas <- seq(from = 0, by = lambdaStepsize,  to = lambdaMax)
+  
+  ## line search
+  rhoVals <- Map(function(lambda) {rhoFn(theta - lambda * g)}, lambdas)
+  ## Return the lambda that gave the minimum
+  lambdas[which.min(rhoVals)]
+}
+
+testConvergence <- function(thetaNew, thetaOld, tolerance = 1E-10, 
+                            relative=FALSE) {
+  sum(abs(thetaNew - thetaOld)) < if (relative) tolerance * sum(abs(thetaOld)) 
+  else tolerance
+}
+```
+```{r}
+gradient <- createGradientProbit(df$Brightness, df$Digit1) 
+rho <- createObjProbit(df$Brightness, df$Digit1)
+
+
+result <- gradientDescent(theta = c(0,0), 
+                          rhoFn = rho, gradientFn = gradient,
+                          lineSearchFn = gridLineSearch,
+                          testConvergenceFn = testConvergence,
+                          lambdaStepsize = 0.001, 
+                          lambdaMax = 1)
+
+Map(function(x){if (is.numeric(x)) round(x,4) else x}, result)
+```
+
+
+### (iv)
+
+If brightness has no effect on Digit1 then $\beta=0$. 
+
+If the proportion of one is 180/300=0.6 then we need to solve $\phi(\alpha)=0.6$ for $\alpha$.
+
+```{r}
+qnorm(0.6)
+```
+
+We get $\alpha$ is 0.2533471.
+
+```{r}
+result <- gradientDescent(theta = c(qnorm(0.6),0), 
+                          rhoFn = rho, gradientFn = gradient,
+                          lineSearchFn = gridLineSearch,
+                          testConvergenceFn = testConvergence,
+                          lambdaStepsize = 0.001, 
+                          lambdaMax = 1)
+
+Map(function(x){if (is.numeric(x)) round(x,4) else x}, result)
+```
+
+We can see that there is an improvement on the number of iterations as the number of iterations is reduced.
+
+## g)
+
+### (i)
+
+```{r}
+temp = plotting(bright2)
+z = seq(8, 68, length.out = 100)
+lines(z, pnorm(0.3284 - 0.1181*(z- mean(df$Brightness))))
+```
+
+### (ii)
+
+```{r, warning=FALSE}
+x = apply(temp[,1:2],1, mean)
+probit.prop = pnorm(0.3284 - 0.1181*(x- mean(df$Brightness))) 
+propx2 = cbind(temp, probit.prop)
+round(propx2,3)
+```
+
+*comments:* We can see that the probit.prop and prop.Digit1 is really similar, nearly the same in bin 7. However, in bin 5, the number is slightly off as there is a big gap between Prop.Digit1 and Probit.Prop.
+
+### (iii)
+
+* The proportion of 1s is monotonic increasing or decreasing under the parametric model assumption. 
+
+* The proportions of 1s over each interval is constant under the non-parametric model assumption.
+
+### (iv)
+
+$$
+\phi(0.3284 - 0.1181\times(x-\bar{x}))=0.5 
+$$
+```{r}
+(qnorm(0.5)-0.3284)/(-0.1181)+mean(df$Brightness)
+```
+
+
+The average pixel brightness would be: 30.77774.
+
+
+## h)
+
+### (i)
+
+```{r}
+create.rho.contour.fn <- function(x, y) {
+  xbar <- mean(x)
+  ## Return this function
+  function(alpha, beta) { 
+    y.hat = alpha + beta * (x - xbar)
+    pi = pnorm(y.hat)
+    -1*mean(y*log(pi/(1-pi)) + log(1-pi))
+  }
+}
+
+rho.to.plot = Vectorize(create.rho.contour.fn(df$Brightness, df$Digit1))
+
+aseq = seq(0, 2,length = 100)
+bseq = seq(-0.3, 0, length = 100)
+z = outer(aseq, bseq , FUN=rho.to.plot)
+
+image(aseq, bseq, z, col = heat.colors(100))
+contour(aseq, bseq, z, add=T)
+```
+
+### (ii)
+
+```{r}
+gradientDescentWithSolutionPath <- function(theta, 
+      rhoFn, gradientFn, lineSearchFn, testConvergenceFn,
+      maxIterations = 100,  
+      tolerance = 1E-6, relative = FALSE, 
+      lambdaStepsize = 0.01, lambdaMax = 0.5) {
+  
+  SolutionPath = matrix(NA,nrow = maxIterations, ncol = length(theta))
+  SolutionPath[1,] = theta
+  converged <- FALSE
+  i <- 0
+  
+  while (!converged & i < (maxIterations-1) ) {
+    g <- gradientFn(theta) ## gradient
+    
+    lambda <- lineSearchFn(theta, rhoFn, g,  
+                lambdaStepsize = lambdaStepsize, lambdaMax = lambdaMax)
+    
+    thetaNew <- theta - lambda * g
+    converged <- testConvergenceFn(thetaNew, theta,
+                                   tolerance = tolerance,
+                                   relative = relative)
+    theta <- thetaNew
+    i <- i + 1
+    SolutionPath[(i+1),] = theta
+  }
+  SolutionPath = SolutionPath[1:(i+1),]
+  ## Return last value and whether converged or not
+  list(theta = theta, converged = converged, iteration = i, 
+       fnValue = rhoFn(theta) , 
+       SolutionPath = SolutionPath)
+}
+```
+
+### (iii)
+
+```{r}
+Optim1 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = gradient, 
+                                         theta = c(0,0),
+                                         lineSearchFn = gridLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         lambdaMax = 1,
+                                         tolerance = 1e-3)
+param1 = Optim1$theta 
+
+Optim2 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = gradient, 
+                                         theta = c(0.25,0),
+                                         lineSearchFn = gridLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         lambdaMax = 1,
+                                         tolerance = 1e-3)
+param2 = Optim2$theta 
+
+Optim3 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = gradient, 
+                                         theta = c(2,-0.3),
+                                         lineSearchFn = gridLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         lambdaMax = 1,
+                                         tolerance = 1e-3)
+param3 = Optim3$theta 
+
+image(aseq, bseq, z, col = heat.colors(100) )
+contour(aseq, bseq, z, add=T)
+
+n.arrows = dim(Optim1$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim1$SolutionPath[i,1],Optim1$SolutionPath[i,2],
+         Optim1$SolutionPath[(i+1),1],Optim1$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15)
+}
+
+n.arrows = dim(Optim2$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim2$SolutionPath[i,1],Optim2$SolutionPath[i,2],
+         Optim2$SolutionPath[(i+1),1],Optim2$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15,col='blue')
+}
+
+n.arrows = dim(Optim3$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim3$SolutionPath[i,1],Optim3$SolutionPath[i,2],
+         Optim3$SolutionPath[(i+1),1],Optim3$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15,col='darkgreen')
+}
+```
+
+```{r}
+knitr::kable(rbind('Optim1'=c(0,0,round(Optim1$theta[1],4),round(Optim1$theta[2],4),
+                     Optim1[2:3],round(as.numeric(Optim1[4]),4)),
+            'Optim2'=c(0.25,0,round(Optim2$theta[1],4),round(Optim2$theta[2],4),
+                     Optim2[2:3],round(as.numeric(Optim2[4]),4)),
+            'Optim3'=c(2,-0.3,round(Optim3$theta[1],4),round(Optim3$theta[2],4),
+                     Optim3[2:3],round(as.numeric(Optim3[4]),4))),
+      col.names = c('alpha0', 'beta0', 'alpha^*', 'beta^*', 'converged',
+                    'iteration','fnValue'),
+      align='c')
+```
+
+### (iv)
+
+```{r}
+createStochasticGrad <- function(x,y, nsize) {
+  ## local variables
+  xbar <- mean(x)
+  ybar <- mean(y)
+  N <- length(x)
+  
+  function(theta) {
+    alpha <- theta[1]
+    beta <- theta[2]
+    
+    subset = sample(N, nsize)
+    x = x[subset]
+    y = y[subset]
+    
+    y.hat = alpha + beta * (x - xbar)
+    pi = pnorm(y.hat)
+    resids = y - pi
+    wt = dnorm(y.hat)/(pi*(1-pi))
+    
+    -1*c(mean(resids*wt), mean(wt*(x - xbar) * resids))
+  }
+}
+```
+
+### (v)
+
+```{r, warning=FALSE}
+sgrad.fn = createStochasticGrad(df$Brightness, df$Digit1, nsize = 25)
+
+fixedLineSearch <- function(theta, rhoFn, g, 
+                            lambdaStepsize = 0.001, 
+                            lambdaMax = 1) {
+  lambdaStepsize
+}
+
+Optim1 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = sgrad.fn, 
+                                         theta = c(0,0),
+                                         lineSearchFn = fixedLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         maxIterations = 500)
+param1 = Optim1$theta 
+
+Optim2 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = sgrad.fn, 
+                                         theta = c(0.25,0),
+                                         lineSearchFn = fixedLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         maxIterations = 500)
+param2 = Optim2$theta 
+
+Optim3 = gradientDescentWithSolutionPath(rhoFn = rho, 
+                                         gradientFn = sgrad.fn, 
+                                         theta = c(2,-0.3),
+                                         lineSearchFn = fixedLineSearch,
+                                         testConvergenceFn = testConvergence,
+                                         lambdaStepsize = 0.001,
+                                         maxIterations = 500)
+param3 = Optim3$theta 
+
+image(aseq, bseq, z, col = heat.colors(100) )
+contour(aseq, bseq, z, add=T)
+
+n.arrows = dim(Optim1$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim1$SolutionPath[i,1],Optim1$SolutionPath[i,2],
+         Optim1$SolutionPath[(i+1),1],Optim1$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15)
+}
+
+n.arrows = dim(Optim2$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim2$SolutionPath[i,1],Optim2$SolutionPath[i,2],
+         Optim2$SolutionPath[(i+1),1],Optim2$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15,col='blue')
+}
+
+n.arrows = dim(Optim3$SolutionPath)[1]
+for(i in 1:(n.arrows-1)){
+  arrows(Optim3$SolutionPath[i,1],Optim3$SolutionPath[i,2],
+         Optim3$SolutionPath[(i+1),1],Optim3$SolutionPath[(i+1),2],
+         length = 0.12,angle = 15,col='darkgreen')
+}
+```
+
+```{r}
+
+plot(Optim1$SolutionPath[, 1], type='l', ylim=c(0,2),
+     xlab='iteration', ylab='alpha')
+lines(Optim2$SolutionPath[,1], col='blue')
+lines(Optim3$SolutionPath[,1], col='green')
+abline(h=0.3284, col='red')
+
+plot(Optim1$SolutionPath[, 2], type='l', ylim=c(-0.3,0),
+     xlab='iteration', ylab='beta')
+lines(Optim2$SolutionPath[,2], col='blue')
+lines(Optim3$SolutionPath[,2], col='green')
+abline(h=-0.1184, col='red')
+```
+
+
+
+
+
+
